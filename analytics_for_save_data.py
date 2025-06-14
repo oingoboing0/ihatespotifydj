@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 
 def load_and_analyze_data(folder_path):
     # Get the most recent file in the directory
-    files = [f for f in os.listdir(folder_path) if f.endswith('.json')]
+    files = [f for f in os.listdir(folder_path) if f.endswith('.json') and f.startswith('save')]
     if not files:
         raise FileNotFoundError("No JSON files found in the specified directory")
     
@@ -23,7 +23,7 @@ def load_and_analyze_data(folder_path):
     # Display missing values in main DataFrame
     print("\nMissing Values in Main DataFrame:")
     print(df.isnull().sum())
-    
+    expanded_tracks_df = None
     # Analyze tracks data
     if 'tracks' in df.columns:
         tracks_data = df['tracks'].iloc[0]  # Get the first row's tracks
@@ -86,6 +86,10 @@ def load_and_analyze_data(folder_path):
                         expanded_tracks_df = pd.DataFrame(expanded_tracks)
                         print("\nExpanded Tracks DataFrame Info:")
                         print(expanded_tracks_df.info())
+    
+    if expanded_tracks_df is None:
+        raise ValueError("Could not create expanded tracks DataFrame. Check if the data structure matches the expected format.")
+        
     return expanded_tracks_df
 
 def preprocess_data(df):

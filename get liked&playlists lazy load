@@ -11,25 +11,58 @@ from pyspark.sql import functions as sf
 import os
 import re
 import pandas as pd
-
+from dotenv import load_dotenv
 
 # Dont you LOVE GLOBAL VARIABLES ??
 app= Flask(__name__)
-
-app.secret_key = "random_string"
+load_dotenv()
+app.secret_key = os.getenv("CLIENT_ID")
  
-CLIENT_ID = 'e3c4538a981d43afae014b023fa19ab6'
-CLIENT_SECRET = '894507959bbd4a56b5d7452206192441'
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 
-REDIRECT_URI = 'http://localhost:5000/callback'
+REDIRECT_URI = os.getenv("REDIRECT_URI")
+AUTH_URL = os.getenv("AUTH_URL")
+TOKEN_URL = os.getenv("TOKEN_URL")
+API_BASE_URL = os.getenv("API_BASE_URL")
 
-AUTH_URL = 'https://accounts.spotify.com/authorize'
-TOKEN_URL ='https://accounts.spotify.com/api/token'
-API_BASE_URL = 'https://api.spotify.com/v1'
+env_file = os.getenv("env_path")
 
 flag_passed = False
 session_token = {}
 page = ''
+
+print('this is my AUTH_URL', AUTH_URL)
+
+
+
+from dotenv import load_dotenv
+import os
+
+def set_env_var(key, value, env_file=".env"):
+    # Create the .env if it doesn't exist
+    if not os.path.exists(env_file):
+        with open(env_file, 'w') as f:
+            f.write("")
+    
+    # Read existing environment variables
+    env_vars = {}
+    with open(env_file, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                key_val = line.split('=', 1)
+                if len(key_val) == 2:
+                    env_vars[key_val[0]] = key_val[1]
+    
+    # Update or add the new key-value pair
+    env_vars[key] = value
+    
+    # Write back all variables
+    with open(env_file, 'w') as file:
+        for k, v in env_vars.items():
+            file.write(f"{k}={v}\n")
+
 
 @app.route('/')
 
@@ -143,12 +176,16 @@ def get_playlists_route():
         #pull all data
         responce = requests.post(TOKEN_URL, data=req_body)
         token_info = responce.json()
+        
         ## clean it a bit
         session_token['access_token']= token_info['access_token']
         session_token['refresh_token']  = token_info['refresh_token'] 
         session_token['expires_at'] =  datetime.now().timestamp() + token_info['expires_in'] 
+        set_env_var("access_token", token_info['access_token'])
+        set_env_var("refresh_token", token_info['refresh_token'] )
+        set_env_var("expires_at", session_token['expires_at'])
 
-        
+
         #MOVED TO LAZY LOADING SCHEME 
         # get the subsequent liked data 
         #result = asyncio.run(get_liked_songs(session))
